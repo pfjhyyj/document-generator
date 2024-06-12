@@ -22,7 +22,23 @@ fn main() {
                 "name": "Name",
                 "dataType": 1,
                 "keyName": "name",
-                "renderMode": 1
+                "renderMode": 1,
+                "properties": [
+                    {
+                        "name": "Name",
+                        "dataType": 1,
+                        "keyName": "name",
+                        "renderMode": 1,
+                        "properties": [
+                            {
+                                "name": "Name",
+                                "dataType": 1,
+                                "keyName": "name",
+                                "renderMode": 1
+                            }
+                        ]
+                    }
+                ]
             },
             {
                 "name": "Age",
