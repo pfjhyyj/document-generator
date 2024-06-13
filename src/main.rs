@@ -1,8 +1,11 @@
 mod parser;
+mod reader;
+mod renderer;
 
-use parser::GenerationRequest;
-use serde_json::{Value, Error};
-use std::collections::HashMap;
+use std::{fs::File, io::Read};
+
+use docx_rs::{read_docx, DocumentChild, ParagraphChild, RunChild};
+use parser::{data_source::DataSource, GenerationRequest};
 
 fn main() {
     let json_str = r#"
@@ -15,6 +18,12 @@ fn main() {
                 "street": "123 Main St",
                 "city": "Anytown"
             },
+            "name": [
+                {
+                    "street": "123 Main St",
+                    "city": "Anytown"
+                }
+            ],
             "scores": [85, 92, 78]
         },
         "resultItem": [
@@ -50,5 +59,33 @@ fn main() {
     }
     "#;
     let request: GenerationRequest = serde_json::from_str(&json_str).unwrap();
-    println!("{:#?}", request);
+    let data_source = DataSource::new(request.data_item).unwrap();
+
+    let mut file = File::open("./hello.docx").unwrap();
+    let mut buf = vec![];
+    file.read_to_end(&mut buf).unwrap();
+    let mut document = read_docx(&buf).unwrap();
+    
+    for element in document.document.children {
+        match element {
+            DocumentChild::Paragraph(paragraph) => {
+                for para in paragraph.children {
+                    match para {
+                        ParagraphChild::Run(run) => {
+                            for run_child in run.children {
+                                match run_child {
+                                    RunChild::Text(text) => {
+                                        println!("{}", text.text);
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
 }
