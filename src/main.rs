@@ -64,12 +64,29 @@ fn main() {
     let mut file = File::open("./hello.docx").unwrap();
     let mut buf = vec![];
     file.read_to_end(&mut buf).unwrap();
-    let mut document = read_docx(&buf).unwrap();
+    let document = read_docx(&buf).unwrap();
     
     for element in document.document.children {
         match element {
             DocumentChild::Paragraph(paragraph) => {
-                for para in paragraph.children {
+                for para in paragraph.children.clone() {
+                    match para {
+                        ParagraphChild::Run(run) => {
+                            for run_child in run.children {
+                                match run_child {
+                                    RunChild::Text(text) => {
+                                        println!("{}", text.text);
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                println!("=====================");
+                let new_paragraph = renderer::document::refactor_paragraph(&paragraph, &"{{abc}}".to_string());
+                for para in new_paragraph.children {
                     match para {
                         ParagraphChild::Run(run) => {
                             for run_child in run.children {

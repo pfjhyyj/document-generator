@@ -38,7 +38,7 @@ pub enum DataType {
 pub struct ResultItem {
   pub name: String,
   pub key_name: String,
-  pub data_type: DataType,
+  pub data_type: DataType,  
   pub render_mode: RenderMode,
   #[serde(default)]
   pub render_format: RenderFormat,
