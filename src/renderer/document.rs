@@ -15,6 +15,7 @@ pub fn refactor_paragraph(paragraph: &Paragraph, placeholder: &String) -> Paragr
 fn escape_braces(s: &str) -> String {
     s.replace("{", "\\{").replace("}", "\\}")
 }
+
 fn refactor_paragraph_children_by_placeholder(paragraph_children: &Vec<ParagraphChild>, placeholder: &String) -> Vec<ParagraphChild> {
     let mut paragraph_text = String::new();
 
