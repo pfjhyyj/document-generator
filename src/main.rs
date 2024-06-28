@@ -2,9 +2,9 @@ mod parser;
 mod reader;
 mod renderer;
 
-use std::{fs::File, io::Read};
+use std::{fs::File, io::Read, path::Path};
 
-use docx_rs::{read_docx, DocumentChild, ParagraphChild, RunChild};
+use docx_rs::{read_docx, DocumentChild, Docx, ParagraphChild, RunChild};
 use parser::{data_source::DataSource, GenerationRequest};
 
 fn main() {
@@ -65,6 +65,8 @@ fn main() {
     let mut buf = vec![];
     file.read_to_end(&mut buf).unwrap();
     let document = read_docx(&buf).unwrap();
+
+    let mut new_document = Docx::new();
     
     for element in document.document.children {
         match element {
@@ -86,23 +88,12 @@ fn main() {
                 }
                 println!("=====================");
                 let new_paragraph = renderer::document::refactor_paragraph(&paragraph, &"{{abc}}".to_string());
-                for para in new_paragraph.children {
-                    match para {
-                        ParagraphChild::Run(run) => {
-                            for run_child in run.children {
-                                match run_child {
-                                    RunChild::Text(text) => {
-                                        println!("{}", text.text);
-                                    }
-                                    _ => {}
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                }
+                new_document = new_document.add_paragraph(new_paragraph);
             }
             _ => {}
         }
     }
+    let path = Path::new("output.docx");
+    let file = File::create(path).unwrap();
+    new_document.build().pack(file).unwrap();
 }
