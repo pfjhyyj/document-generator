@@ -1,4 +1,6 @@
-use std::{collections::{HashMap, VecDeque}, fmt::Error};
+use std::collections::{HashMap, VecDeque};
+
+use crate::error::GeneratorError;
 
 use super::result_item::{ DataItem, SingleValue};
 
@@ -13,7 +15,7 @@ pub struct TraverseDataItem {
 }
 
 impl DataSource {
-    pub fn new(data: DataItem) -> Result<DataSource, Error> {
+    pub fn new(data: DataItem) -> Result<DataSource, GeneratorError> {
         let mut map = HashMap::new();
         let mut stack: VecDeque<TraverseDataItem> = VecDeque::new();
         stack.push_back(TraverseDataItem { 
@@ -51,8 +53,7 @@ impl DataSource {
         }
         Ok(DataSource {data_map: map})
     }
-
-    // pub fn get_data(&self, key: &str) -> Option<&SingleValue> {
-    //     self.data_map.get(key)
-    // }
+    pub fn get_value(&self, key: &str) -> Option<&SingleValue> {
+        self.data_map.get(key)
+    }
 }

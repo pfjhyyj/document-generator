@@ -1,8 +1,57 @@
 use docx_rs::{Paragraph, ParagraphChild, Run, RunChild, RunProperty, Text};
 use regex::Regex;
 
+use super::replacement::Replacement;
+
+pub fn replace_placeholder_in_paragraph(paragraph: &Paragraph, placeholder: &String, replacement: &Replacement) -> Paragraph {
+    let refactored_paragraph = refactor_paragraph(paragraph, placeholder);
+    let mut new_paragraph = refactored_paragraph.clone();
+    new_paragraph.children = Vec::new();
+    for paragraph_child in refactored_paragraph.children.iter() {
+        match paragraph_child {
+            ParagraphChild::Run(run) => {
+                let mut replace_by_replacement = false;
+                for run_child in run.children.iter() {
+                    if let RunChild::Text(text) = run_child {
+                        if text.text.contains(placeholder) {
+                            let new_run = generate_new_run_by_replacement(run, replacement);
+                            new_paragraph.children.push(ParagraphChild::Run(Box::new(new_run)));
+                            replace_by_replacement = true;
+                            break;
+                        }
+                    }
+                }
+                if !replace_by_replacement {
+                    new_paragraph.children.push(paragraph_child.clone());
+                }
+            }
+            _ => {
+                new_paragraph.children.push(paragraph_child.clone());
+            }
+        }
+    }
+    new_paragraph
+}
+
+fn generate_new_run_by_replacement(run: &Run, replacement: &Replacement) -> Run {
+    let mut new_run = run.clone();
+    new_run.children = Vec::new();
+    match replacement {
+        Replacement::STRING(value) => {
+            let new_text = Text::new(value.value.clone());
+            new_run.children.push(RunChild::Text(new_text));
+        }
+        _ => {
+            // TODO
+        }
+    }
+    new_run
+}
+
+
+
 // refactor paragraph to make sure that the placeholder is in the same run
-pub fn refactor_paragraph(paragraph: &Paragraph, placeholder: &String) -> Paragraph {
+fn refactor_paragraph(paragraph: &Paragraph, placeholder: &String) -> Paragraph {
     let mut new_paragraph = Paragraph::new();
     let paragraph_children = paragraph.children.clone();
     let searching_paragraph_children = refactor_paragraph_children_by_placeholder(&paragraph_children, placeholder);
@@ -116,15 +165,6 @@ fn refactor_paragraph_children_by_placeholder(paragraph_children: &Vec<Paragraph
                 new_paragraph_children.push(ParagraphChild::Run(Box::new(new_run)));
             }
         }
-    }
-
-    if in_placeholder {
-        // Handle the case where the placeholder is at the end of the paragraph
-        let new_combined_run = Run {
-            run_property: current_run_property.take().unwrap(),
-            children: vec![RunChild::Text(Text::new(&combined_text))],
-        };
-        new_paragraph_children.push(ParagraphChild::Run(Box::new(new_combined_run)));
     }
 
     new_paragraph_children
