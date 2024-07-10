@@ -2,7 +2,7 @@ use docx_rs::{Document, DocumentChild};
 
 use super::{paragraph::replace_placeholder_in_paragraph, replacement::Replacement, table::replace_placeholder_in_table};
 
-pub fn replace_placeholder_in_document(document: &Document, placeholder: &String, replacement: &Replacement) -> Document {
+pub fn replace_placeholder_in_document(document: Document, placeholder: &String, replacement: &Replacement) -> Document {
     let mut new_document = Document::new();
     for document_child in document.children.iter() {
         match document_child {

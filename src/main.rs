@@ -1,18 +1,14 @@
 mod generator;
 mod error;
 
-use std::{fs::File, io::Read, path::Path};
-
-use docx_rs::{read_docx, DocumentChild, Docx};
-use generator::parser::{data_source::DataSource, GenerationRequest};
-
 fn main() {
     let json_str = r#"
     {
         "templateFile": "template.docx",
         "dataItem": {
             "name": "John Doe",
-            "age": 30
+            "age": 30,
+            "image": "http://i0.hdslb.com/bfs/new_dyn/f3e8656b36556c95941b703f5b937e4343536.png"
         },
         "resultItem": [
             {
@@ -26,6 +22,26 @@ fn main() {
                 "dataType": 1,
                 "keyName": "age",
                 "renderMode": 1
+            },
+            {
+                "name": "Image",
+                "dataType": 1,
+                "keyName": "image",
+                "renderMode": 3
+            },
+            {
+                "name": "Age",
+                "dataType": 1,
+                "keyName": "age",
+                "renderMode": 1,
+                "properties": [
+                    {
+                        "name": "Age",
+                        "dataType": 1,
+                        "keyName": "age",
+                        "renderMode": 1
+                    }
+                ]
             }
         ]
     }
@@ -34,6 +50,6 @@ fn main() {
     let result = generator::generate_new_document(&json_str.to_string());
     match result {
         Ok(_) => println!("Document generated successfully"),
-        Err(e) => println!("Error: {:?}", e)
+        Err(e) => eprintln!("Error: {:?}", e)
     }
 }

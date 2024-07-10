@@ -1,29 +1,10 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
 use super::render_format::{RenderFormat, RenderMode};
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged, rename_all = "camelCase")]
-pub enum DataItem {
-    SingleValue(SingleValue),
-    Object(HashMap<String, DataItem>),
-    Array(Vec<DataItem>)
-}
 
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(untagged, rename_all = "camelCase")]
-pub enum SingleValue {
-    Number(f64),
-    String(String),
-    Boolean(bool),
-    NumberArray(Vec<f64>),
-    StringArray(Vec<String>),
-}
-
-#[derive(Serialize_repr, Deserialize_repr, Debug)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, Clone)]
 #[repr(u8)]
 pub enum DataType {
   String = 1,
@@ -33,7 +14,7 @@ pub enum DataType {
   Array = 5
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ResultItem {
   pub name: String,

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use serde_repr::{Deserialize_repr, Serialize_repr};
 
-#[derive(Serialize_repr, Deserialize_repr, Debug, PartialEq)]
+#[derive(Serialize_repr, Deserialize_repr, Debug, PartialEq, Clone)]
 #[repr(u8)]
 pub enum RenderMode {
     String = 1,
@@ -13,7 +13,7 @@ pub enum RenderMode {
     Template = 99,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum RenderFormat {
     None,
@@ -29,26 +29,35 @@ impl Default for RenderFormat {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[repr(u8)]
 pub enum ImageRenderMode {
     AutoSize = 1,
     FixSize = 2,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+impl Default for ImageRenderMode {
+    fn default() -> Self {
+        ImageRenderMode::AutoSize
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ImageFormat {
+    #[serde(default)]
     pub width: f32,
+    #[serde(default)]
     pub height: f32,
+    #[serde(default)]
     pub mode: ImageRenderMode,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct NumberFormat {
     pub precision: u8,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TableFormat {
     pub repeat_header: bool,
     pub header_row_length: u8,
@@ -56,7 +65,7 @@ pub struct TableFormat {
     pub merge_column_length: u8,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TemplateFormat {
     pub template: String,
 }

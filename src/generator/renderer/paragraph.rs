@@ -1,4 +1,4 @@
-use docx_rs::{Paragraph, ParagraphChild, Run, RunChild, RunProperty, Text};
+use docx_rs::{Paragraph, ParagraphChild, Pic, Run, RunChild, RunProperty, Text};
 use regex::Regex;
 
 use super::replacement::Replacement;
@@ -38,8 +38,23 @@ fn generate_new_run_by_replacement(run: &Run, replacement: &Replacement) -> Run 
     new_run.children = Vec::new();
     match replacement {
         Replacement::STRING(value) => {
-            let new_text = Text::new(value.value.clone());
-            new_run.children.push(RunChild::Text(new_text));
+            let new_text = value.value.clone();
+            new_run = new_run.add_text(new_text);
+        }
+        Replacement::NUMBER(value) => {
+            let new_text = format!("{:.1$}", value.value, value.precision as usize);
+            new_run = new_run.add_text(new_text);
+        }
+        Replacement::CHECKBOX(value) => {
+            let new_text = if value.value { "☑" } else { "☐" };
+            new_run = new_run.add_text(new_text);
+        }
+        Replacement::IMAGE(value) => {
+            let pic = Pic::new(&value.value).size(200000, 200000);
+            new_run = new_run.add_image(pic);
+        }
+        Replacement::EMPTY => {
+            // Do nothing
         }
         _ => {
             // TODO
@@ -105,21 +120,42 @@ fn refactor_paragraph_children_by_placeholder(paragraph_children: &Vec<Paragraph
     for paragraph_child in paragraph_children.iter() {
         if let ParagraphChild::Run(run) = paragraph_child {
             let mut new_run_children: Vec<RunChild> = Vec::new();
+            current_run_property = Some(run.run_property.clone());
 
             for run_child in run.children.iter() {
                 if let RunChild::Text(text) = run_child {
                     let mut text_length = text.text.len();
 
                     loop {
-                        if char_index <= start && char_index + text_length > start {
-                            // Placeholder starts in this run
-                            in_placeholder = true;
-                            combined_text.push_str(&text.text[start - char_index..]);
-                            if current_run_property.is_none() {
-                                current_run_property = Some(run.run_property.clone());
-                            }
-                            char_index += text_length;
+                        if text_length == 0 {
                             break;
+                        } else if char_index <= start && char_index + text_length > start {
+                            // Placeholder start or in this run
+                            if char_index + text_length >= end {
+                                // Placeholder is in this run
+                                combined_text.push_str(&text.text[start - char_index..end - char_index]);
+                                let new_combined_run = Run {
+                                    run_property: current_run_property.clone().unwrap(),
+                                    children: vec![RunChild::Text(Text::new(&combined_text))],
+                                };
+                                new_paragraph_children.push(ParagraphChild::Run(Box::new(new_combined_run)));
+                                text_length = text_length - (end - start);
+                                char_index += end - start;
+                                combined_text.clear();
+
+                                placeholder_index += 1;
+                                if placeholder_index < matches.len() {
+                                    start = matches.get(placeholder_index).unwrap().0;
+                                    end = matches.get(placeholder_index).unwrap().1;
+                                }
+                                continue;
+                            } else {
+                                // Placeholder is starting in this run
+                                in_placeholder = true;
+                                combined_text.push_str(&text.text[start - char_index..]);
+                                char_index += text_length;
+                                break;
+                            }
                         } else if in_placeholder && char_index + text_length < end {
                             // Placeholder is continuing in this run
                             combined_text.push_str(&text.text);
@@ -130,7 +166,7 @@ fn refactor_paragraph_children_by_placeholder(paragraph_children: &Vec<Paragraph
                             in_placeholder = false;
                             combined_text.push_str(&text.text[..end - char_index]);
                             let new_combined_run = Run {
-                                run_property: current_run_property.take().unwrap(),
+                                run_property: current_run_property.clone().unwrap(),
                                 children: vec![RunChild::Text(Text::new(&combined_text))],
                             };
                             new_paragraph_children.push(ParagraphChild::Run(Box::new(new_combined_run)));
